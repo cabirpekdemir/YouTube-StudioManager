@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ channel.name }} — YT Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0c;--surface:#111116;--surface2:#16161d;--border:#1e1e28;--border2:#2a2a38;
+  --accent:#ff3f3f;--accent2:#ffaa00;--green:#00e676;--blue:#4488ff;--text:#e8e8f0;--muted:#6b6b80;
+  --mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}
+
+/* NAV */
+nav{display:flex;align-items:center;gap:14px;padding:0 28px;height:56px;
+  border-bottom:1px solid var(--border);background:var(--surface);
+  position:sticky;top:0;z-index:100;}
+.logo{font-family:var(--mono);font-size:13px;letter-spacing:3px;color:var(--accent);}
+.breadcrumb{color:var(--muted);font-size:13px;}
+.breadcrumb a{color:var(--muted);text-decoration:none;}
+.breadcrumb a:hover{color:var(--text);}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.lang-toggle{display:flex;align-items:center;background:var(--bg);border:1px solid var(--border2);border-radius:7px;overflow:hidden;font-family:var(--mono);font-size:11px;}
+.lang-btn{padding:4px 10px;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .15s;}
+.lang-btn.active{background:var(--accent);color:#fff;}
+
+/* LAYOUT */
+main{display:grid;grid-template-columns:1fr 300px;gap:0;height:calc(100vh - 56px);}
+.left-panel{overflow-y:auto;padding:24px;}
+.right-panel{border-left:1px solid var(--border);overflow-y:auto;background:var(--surface);}
+
+/* PAGE HEADER */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.page-header h1{font-size:20px;font-weight:700;}
+.page-header p{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+
+/* BUTTONS */
+.btn{padding:7px 16px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:var(--sans);}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{background:#ff6060;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border2);}
+.btn-ghost:hover{border-color:var(--text);color:var(--text);}
+.btn-green{background:var(--green);color:#000;font-weight:700;}
+.btn-green:hover{background:#33ff8a;}
+.btn-yellow{background:var(--accent2);color:#000;font-weight:700;}
+
+/* AUTH BANNER */
+.auth-banner{background:#ffaa0010;border:1px solid #ffaa0040;border-radius:10px;
+  padding:11px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.auth-banner p{font-size:13px;color:var(--accent2);}
+
+/* DRAG & DROP UPLOAD */
+.upload-zone{
+  border:2px dashed var(--border2);border-radius:12px;
+  padding:28px 20px;text-align:center;cursor:pointer;
+  transition:all .2s;margin-bottom:20px;position:relative;
+  background:var(--surface2);
+}
+.upload-zone:hover,.upload-zone.drag-over{
+  border-color:var(--accent);background:#ff3f3f06;
+}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.upload-icon{font-size:28px;margin-bottom:8px;}
+.upload-text{font-size:13px;color:var(--muted);}
+.upload-text strong{color:var(--accent);cursor:pointer;}
+.upload-hint{font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--mono);}
+
+/* UPLOAD PROGRESS */
+.upload-progress-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.upload-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.upload-item-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.upload-item-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;}
+.upload-item-pct{font-family:var(--mono);font-size:11px;color:var(--accent2);}
+.progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s;border-radius:2px;}
+.upload-item.done .progress-fill{background:var(--green);}
+.upload-item.error .progress-fill{background:var(--accent);}
+.upload-status{font-size:10px;color:var(--muted);margin-top:5px;font-family:var(--mono);}
+
+/* FILTER BAR */
+.filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filter-btn{padding:5px 12px;border-radius:6px;font-size:11px;font-family:var(--mono);cursor:pointer;border:1px solid var(--border2);background:var(--bg);color:var(--muted);transition:all .15s;}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.filter-search{flex:1;min-width:140px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:5px 12px;color:var(--text);font-size:12px;outline:none;font-family:var(--sans);}
+.filter-search:focus{border-color:var(--accent);}
+.sort-select{background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:5px 10px;color:var(--text);font-size:11px;outline:none;font-family:var(--mono);}
+
+/* VIDEO LIST */
+.video-list{display:flex;flex-direction:column;gap:8px;}
+.video-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  display:grid;grid-template-columns:100px 1fr auto;overflow:hidden;transition:border-color .15s;cursor:pointer;}
+.video-row:hover{border-color:var(--border2);}
+.video-thumb{width:100px;height:56px;background:#0d0d12;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;flex-shrink:0;}
+.video-thumb img{width:100%;height:100%;object-fit:cover;}
+.video-info{padding:9px 13px;display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0;}
+.video-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.video-badges{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.badge{font-size:10px;padding:2px 6px;border-radius:4px;font-family:var(--mono);white-space:nowrap;}
+.badge-shorts{background:#ff3f3f22;color:var(--accent);}
+.badge-normal{background:#4488ff22;color:var(--blue);}
+.badge-size{background:#ffffff08;color:var(--muted);}
+.badge-meta{background:#00e67618;color:var(--green);}
+.badge-date{background:#ffaa0018;color:var(--accent2);}
+.video-actions{display:flex;align-items:center;padding:0 12px;}
+.empty{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+
+/* VIDEO COUNT */
+.list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.list-count{font-size:11px;color:var(--muted);font-family:var(--mono);}
+
+/* ── RIGHT PANEL: SCHEDULE CALENDAR ── */
+.rp-section{padding:18px 16px;border-bottom:1px solid var(--border);}
+.rp-title{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:14px;}
+.cal-tabs{display:flex;gap:6px;margin-bottom:12px;}
+.cal-tab{padding:4px 10px;border-radius:5px;font-size:11px;font-family:var(--mono);cursor:pointer;border:1px solid var(--border2);background:var(--bg);color:var(--muted);transition:all .15s;}
+.cal-tab.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.slot-list{display:flex;flex-direction:column;gap:6px;}
+.slot-row{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 11px;display:flex;justify-content:space-between;align-items:center;}
+.slot-day{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.slot-time{font-family:var(--mono);font-size:12px;color:var(--accent2);}
+.slot-count{font-size:10px;color:var(--muted);}
+.gcal-btn{width:100%;margin-top:10px;padding:8px;border-radius:7px;background:var(--bg);border:1px solid var(--border2);color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:var(--sans);}
+.gcal-btn:hover{border-color:var(--blue);color:var(--blue);}
+.gcal-status{font-size:10px;text-align:center;margin-top:6px;font-family:var(--mono);}
+.gcal-status.on{color:var(--green);}
+.gcal-status.off{color:var(--muted);}
+
+/* CHANNEL INFO */
+.ch-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ch-info-item{background:var(--bg);border-radius:7px;padding:9px 11px;}
+.ch-info-val{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--accent2);}
+.ch-info-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* SPINNER */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:#000000bb;backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:800px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.modal-header h2{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.modal-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;}
+.modal-close:hover{color:var(--text);}
+.modal-body{display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden;}
+.modal-preview{background:#07070a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px;border-right:1px solid var(--border);gap:8px;}
+.modal-preview video{max-width:100%;max-height:200px;border-radius:6px;}
+.modal-preview img{max-width:100%;max-height:110px;border-radius:5px;}
+.modal-form{padding:16px;overflow-y:auto;}
+.form-group{margin-bottom:12px;}
+label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+input,textarea,select{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;color:var(--text);font-family:var(--sans);font-size:13px;transition:border-color .15s;outline:none;}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);}
+textarea{resize:vertical;min-height:65px;}
+.char-count{font-size:10px;color:var(--muted);text-align:right;margin-top:2px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:8px 11px;}
+.toggle{position:relative;width:38px;height:22px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:#2a2a38;border-radius:11px;transition:.2s;cursor:pointer;}
+.toggle-slider:before{content:'';position:absolute;width:16px;height:16px;left:3px;bottom:3px;background:#666;border-radius:50%;transition:.2s;}
+.toggle input:checked + .toggle-slider{background:var(--accent);}
+.toggle input:checked + .toggle-slider:before{transform:translateX(16px);background:#fff;}
+.slot-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px;}
+.slot-item{padding:6px 9px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;font-size:11px;display:flex;justify-content:space-between;align-items:center;transition:all .15s;}
+.slot-item:hover,.slot-item.selected{border-color:var(--accent2);background:#ffaa0012;color:var(--accent2);}
+.slot-day{font-family:var(--mono);font-size:10px;}
+.modal-footer{padding:11px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:space-between;align-items:center;}
+.modal-footer-left{display:flex;gap:8px;}
+
+/* YOUTUBE UPLOAD PROGRESS in modal */
+.yt-progress{margin-top:10px;display:none;}
+.yt-progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:6px;}
+.yt-progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s;border-radius:3px;}
+.yt-progress-text{font-size:11px;color:var(--muted);font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">YT</div>
+  <div class="breadcrumb">
+    <a href="/">{{ 'Channels' if True else 'Kanallar' }}</a> /
+    <span style="color:var(--text)">{{ channel.name }}</span>
+  </div>
+  <div class="nav-right">
+    <span id="scan-indicator"></span>
+    <button class="btn btn-ghost" onclick="scanVideos()" id="scan-btn">⟳ <span data-en="Scan" data-tr="Tara">Scan</span></button>
+    {% if not channel.auth_ok %}
+    <button class="btn btn-yellow" onclick="doAuth()">🔑 <span data-en="Connect YouTube" data-tr="YouTube Bağla">Connect YouTube</span></button>
+    {% else %}
+    <span style="font-size:11px;color:var(--green);font-family:var(--mono)">✓ Connected</span>
+    {% endif %}
+    <div class="lang-toggle">
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="btn-tr" onclick="setLang('tr')">TR</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <!-- ── LEFT: VIDEO PANEL ── -->
+  <div class="left-panel">
+
+    {% if not channel.auth_ok %}
+    <div class="auth-banner">
+      <p>⚠ <span data-en="Channel not connected to YouTube." data-tr="Kanal YouTube'a bağlanmamış.">Channel not connected to YouTube.</span></p>
+      <button class="btn btn-yellow" onclick="doAuth()" style="font-size:12px;padding:5px 12px">Connect</button>
+    </div>
+    {% endif %}
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <h1>{{ channel.name }}</h1>
+        <p>{{ channel.youtube_channel_id or 'No YouTube ID' }}</p>
+      </div>
+    </div>
+
+    <!-- DRAG & DROP UPLOAD ZONE -->
+    <div class="upload-zone" id="dropZone">
+      <input type="file" id="fileInput" accept="video/*" multiple onchange="handleFiles(this.files)">
+      <div class="upload-icon">🎬</div>
+      <div class="upload-text">
+        <span data-en="Drag & drop videos here or" data-tr="Videoları sürükle bırak veya">Drag & drop videos here or</span>
+        <strong onclick="document.getElementById('fileInput').click()">
+          <span data-en="browse" data-tr="seç">browse</span>
+        </strong>
+      </div>
+      <div class="upload-hint">MP4 · MOV · MKV · AVI</div>
+    </div>
+
+    <!-- UPLOAD PROGRESS LIST -->
+    <div class="upload-progress-list" id="uploadProgressList"></div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all')" data-en="All" data-tr="Tümü">All</button>
+      <button class="filter-btn" data-filter="normal" onclick="setFilter('normal')" data-en="Normal" data-tr="Normal">Normal</button>
+      <button class="filter-btn" data-filter="shorts" onclick="setFilter('shorts')" data-en="Shorts" data-tr="Shorts">Shorts</button>
+      <button class="filter-btn" data-filter="meta" onclick="setFilter('meta')" data-en="Has Meta" data-tr="Meta Var">Has Meta</button>
+      <input class="filter-search" id="search-input" placeholder="Search..." oninput="applyFilters()">
+      <select class="sort-select" id="sort-select" onchange="applyFilters()">
+        <option value="name">Name</option>
+        <option value="size">Size</option>
+        <option value="date">Date</option>
+      </select>
+    </div>
+
+    <!-- LIST HEADER -->
+    <div class="list-header">
+      <span class="list-count" id="list-count">–</span>
+    </div>
+
+    <!-- VIDEO LIST -->
+    <div id="video-list" class="video-list">
+      <div style="padding:16px;color:var(--muted);display:flex;align-items:center;gap:8px;">
+        <span class="spinner"></span> <span data-en="Loading..." data-tr="Yükleniyor...">Loading...</span>
+      </div>
+    </div>
+
+  </div><!-- /left-panel -->
+
+  <!-- ── RIGHT: SCHEDULE + INFO ── -->
+  <div class="right-panel">
+
+    <!-- Channel stats -->
+    <div class="rp-section">
+      <div class="rp-title" data-en="Channel Info" data-tr="Kanal Bilgisi">Channel Info</div>
+      <div class="ch-info-grid">
+        <div class="ch-info-item">
+          <div class="ch-info-val" id="stat-pending">–</div>
+          <div class="ch-info-lbl" data-en="Pending" data-tr="Bekleyen">Pending</div>
+        </div>
+        <div class="ch-info-item">
+          <div class="ch-info-val">{{ channel.normal_period.days }}d</div>
+          <div class="ch-info-lbl" data-en="H. Period" data-tr="Y. Periyot">H. Period</div>
+        </div>
+        <div class="ch-info-item">
+          <div class="ch-info-val">{{ channel.shorts_period.days }}d</div>
+          <div class="ch-info-lbl" data-en="V. Period" data-tr="D. Periyot">V. Period</div>
+        </div>
+        <div class="ch-info-item">
+          <div class="ch-info-val">{{ channel.language | upper }}</div>
+          <div class="ch-info-lbl" data-en="Language" data-tr="Dil">Language</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule -->
+    <div class="rp-section">
+      <div class="rp-title" data-en="Upcoming Schedule" data-tr="Yayın Takvimi">Upcoming Schedule</div>
+      <div class="cal-tabs">
+        <button class="cal-tab active" onclick="loadCalendar('horizontal')" id="tab-h">
+          <span data-en="Horizontal" data-tr="Yatay">Horizontal</span>
+        </button>
+        <button class="cal-tab" onclick="loadCalendar('vertical')" id="tab-v">
+          <span data-en="Vertical" data-tr="Dikey">Vertical</span>
+        </button>
+      </div>
+      <div class="slot-list" id="slot-list">
+        <div style="color:var(--muted);font-size:12px;text-align:center;padding:16px;">
+          <span class="spinner"></span>
+        </div>
+      </div>
+      <button class="gcal-btn" onclick="addToGcal()">
+        📅 <span data-en="Add to Google Calendar" data-tr="Google Takvime Ekle">Add to Google Calendar</span>
+      </button>
+      <div class="gcal-status" id="gcal-status"></div>
+    </div>
+
+  </div><!-- /right-panel -->
+</main>
+
+<!-- ── VIDEO EDIT MODAL ── -->
+<div class="modal-overlay" id="videoModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">—</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-preview">
+        <video id="modal-video" controls preload="metadata"></video>
+        <img id="modal-thumb" src="" style="display:none">
+        <div id="no-thumb" style="display:none;font-size:11px;color:var(--muted);text-align:center">
+          📷 <span data-en="No thumbnail — add .jpg with same name" data-tr="Kapak yok — aynı isimde .jpg ekleyin">No thumbnail</span>
+        </div>
+      </div>
+      <div class="modal-form">
+        <div class="form-group">
+          <label data-en="Video Type" data-tr="Video Tipi">Video Type</label>
+          <div class="toggle-row">
+            <div>
+              <div id="type-label" style="font-size:13px" data-en="Normal Video" data-tr="Normal Video">Normal Video</div>
+              <div style="font-size:11px;color:var(--muted)" data-en="Toggle for Shorts (9:16)" data-tr="Shorts için çevirin (9:16)">Toggle for Shorts</div>
+            </div>
+            <label class="toggle"><input type="checkbox" id="f-shorts" onchange="onShortsToggle()"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label data-en="Title" data-tr="Başlık">Title <span id="title-count" class="char-count">0/100</span></label>
+          <input type="text" id="f-title" maxlength="100" oninput="document.getElementById('title-count').textContent=this.value.length+'/100'">
+        </div>
+        <div class="form-group">
+          <label data-en="Description" data-tr="Açıklama">Description</label>
+          <textarea id="f-desc" rows="4"></textarea>
+        </div>
+        <div class="form-group">
+          <label data-en="Tags (comma separated)" data-tr="Etiketler (virgülle)">Tags</label>
+          <input type="text" id="f-tags">
+        </div>
+        <div class="form-group">
+          <label data-en="Publish Time" data-tr="Yayın Zamanı">Publish Time</label>
+          <input type="datetime-local" id="f-publish">
+          <div class="slot-grid" id="slot-grid"></div>
+        </div>
+        <div class="form-group">
+          <label data-en="Privacy" data-tr="Gizlilik">Privacy</label>
+          <select id="f-privacy">
+            <option value="private" data-en="Private (scheduled)" data-tr="Gizli (zamanlanmış)">Private (scheduled)</option>
+            <option value="public" data-en="Public" data-tr="Herkese Açık">Public</option>
+            <option value="unlisted" data-en="Unlisted" data-tr="Listelenmemiş">Unlisted</option>
+          </select>
+        </div>
+        <!-- YT Upload Progress -->
+        <div class="yt-progress" id="yt-progress">
+          <div class="yt-progress-text" id="yt-progress-text">Uploading...</div>
+          <div class="yt-progress-bar"><div class="yt-progress-fill" id="yt-progress-fill"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer-left">
+        <button class="btn btn-ghost" id="ai-btn" onclick="generateAI()">✨ AI</button>
+        <button class="btn btn-ghost" id="save-btn" onclick="saveMeta()">💾 <span data-en="Save" data-tr="Kaydet">Save</span></button>
+      </div>
+      <button class="btn btn-green" id="upload-btn" onclick="uploadVideo()">▲ <span data-en="Upload to YouTube" data-tr="YouTube'a Gönder">Upload to YouTube</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+var CHANNEL_ID   = "{{ channel.id }}";
+var CHANNEL_LANG = "{{ channel.language }}";
+var allVideos    = [];
+var currentIdx   = -1;
+var currentFilter= 'all';
+var currentCalType = 'horizontal';
+var currentLang  = localStorage.getItem('yt_lang') || 'en';
+
+// ── LANG ─────────────────────────────────────────
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('yt_lang', lang);
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-tr').classList.toggle('active', lang === 'tr');
+  document.querySelectorAll('[data-en]').forEach(el => {
+    if (el.children.length === 0) el.textContent = el.dataset[lang] || el.dataset.en;
+  });
+  document.getElementById('search-input').placeholder = lang === 'tr' ? 'Ara...' : 'Search...';
+}
+
+// ── DRAG & DROP ──────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(files) {
+  [...files].forEach(file => {
+    if (!file.type.startsWith('video/')) return;
+    uploadFileToServer(file);
+  });
+}
+
+function uploadFileToServer(file) {
+  const list = document.getElementById('uploadProgressList');
+  const itemId = 'up-' + Date.now() + Math.random().toString(36).slice(2);
+
+  const item = document.createElement('div');
+  item.className = 'upload-item';
+  item.id = itemId;
+  item.innerHTML = `
+    <div class="upload-item-header">
+      <div class="upload-item-name">${file.name}</div>
+      <div class="upload-item-pct" id="${itemId}-pct">0%</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="${itemId}-fill" style="width:0"></div></div>
+    <div class="upload-status" id="${itemId}-status">Uploading to server...</div>
+  `;
+  list.prepend(item);
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('channel_id', CHANNEL_ID);
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/upload-file');
+
+  xhr.upload.onprogress = e => {
+    if (!e.lengthComputable) return;
+    const pct = Math.round(e.loaded / e.total * 100);
+    document.getElementById(`${itemId}-pct`).textContent = pct + '%';
+    document.getElementById(`${itemId}-fill`).style.width = pct + '%';
+  };
+
+  xhr.onload = () => {
+    const res = JSON.parse(xhr.responseText);
+    if (res.ok) {
+      item.classList.add('done');
+      document.getElementById(`${itemId}-pct`).textContent = '✓';
+      document.getElementById(`${itemId}-fill`).style.width = '100%';
+      document.getElementById(`${itemId}-status`).textContent = currentLang === 'tr' ? 'Kopyalandı — liste yenileniyor...' : 'Copied — refreshing list...';
+      setTimeout(() => { loadVideos(); item.remove(); }, 1500);
+    } else {
+      item.classList.add('error');
+      document.getElementById(`${itemId}-status`).textContent = 'Error: ' + (res.error || 'Failed');
+    }
+  };
+
+  xhr.onerror = () => {
+    item.classList.add('error');
+    document.getElementById(`${itemId}-status`).textContent = 'Network error';
+  };
+
+  xhr.send(formData);
+}
+
+// ── VIDEOS ───────────────────────────────────────
+function loadVideos() {
+  fetch('/api/channels/' + CHANNEL_ID + '/scan')
+    .then(r => r.json())
+    .then(data => { allVideos = data; applyFilters(); updateStatPending(); });
+}
+
+function scanVideos() {
+  const btn = document.getElementById('scan-btn');
+  document.getElementById('scan-indicator').innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+  fetch('/api/channels/' + CHANNEL_ID + '/scan')
+    .then(r => r.json())
+    .then(data => {
+      allVideos = data; applyFilters(); updateStatPending();
+      document.getElementById('scan-indicator').innerHTML = '';
+      btn.disabled = false;
+    });
+}
+
+function updateStatPending() {
+  document.getElementById('stat-pending').textContent = allVideos.length;
+}
+
+// ── FILTER & SORT ─────────────────────────────────
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+  applyFilters();
+}
+
+function applyFilters() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const sort   = document.getElementById('sort-select').value;
+
+  let filtered = allVideos.filter(v => {
+    const title  = (v.meta?.title || v.stem || '').toLowerCase();
+    const matchSearch = !search || title.includes(search);
+    const isShorts = !!(v.meta?.is_shorts);
+    const matchFilter =
+      currentFilter === 'all'    ? true :
+      currentFilter === 'shorts' ? isShorts :
+      currentFilter === 'normal' ? !isShorts :
+      currentFilter === 'meta'   ? !!(v.meta?.title) : true;
+    return matchSearch && matchFilter;
+  });
+
+  filtered.sort((a, b) => {
+    if (sort === 'size') return (b.size_mb || 0) - (a.size_mb || 0);
+    if (sort === 'date') return new Date(b.meta?.publish_at || 0) - new Date(a.meta?.publish_at || 0);
+    return (a.stem || '').localeCompare(b.stem || '');
+  });
+
+  const countEl = document.getElementById('list-count');
+  countEl.textContent = `${filtered.length} / ${allVideos.length} ${currentLang === 'tr' ? 'video' : 'videos'}`;
+
+  renderList(filtered);
+}
+
+function renderList(videos) {
+  const el = document.getElementById('video-list');
+  if (!videos.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🎬</div>
+      <p>${currentLang === 'tr' ? 'Video bulunamadı' : 'No videos found'}</p></div>`;
+    return;
+  }
+  el.innerHTML = videos.map((v, i) => {
+    const isShorts  = !!(v.meta?.is_shorts);
+    const title     = v.meta?.title || v.stem;
+    const pubDate   = v.meta?.publish_at ? new Date(v.meta.publish_at).toLocaleDateString(currentLang === 'tr' ? 'tr' : 'en') : '';
+    const thumbHtml = v.has_thumb
+      ? `<img src="/api/video/thumbnail/${CHANNEL_ID}/${encodeURIComponent(v.rel)}" loading="lazy">`
+      : '🎬';
+    const realIdx   = allVideos.indexOf(v);
+    return `
+      <div class="video-row" data-idx="${realIdx}">
+        <div class="video-thumb">${thumbHtml}</div>
+        <div class="video-info">
+          <div class="video-name">${title}</div>
+          <div class="video-badges">
+            <span class="badge ${isShorts ? 'badge-shorts' : 'badge-normal'}">${isShorts ? 'SHORTS' : 'NORMAL'}</span>
+            <span class="badge badge-size">${v.size_mb} MB</span>
+            ${v.meta?.title ? '<span class="badge badge-meta">✓ meta</span>' : ''}
+            ${pubDate ? `<span class="badge badge-date">📅 ${pubDate}</span>` : ''}
+          </div>
+        </div>
+        <div class="video-actions">
+          <button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="event.stopPropagation();openModal(${realIdx})">Edit</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  el.querySelectorAll('.video-row').forEach(row => {
+    row.addEventListener('click', () => openModal(+row.dataset.idx));
+  });
+}
+
+// ── SCHEDULE CALENDAR ─────────────────────────────
+function loadCalendar(type) {
+  currentCalType = type;
+  document.getElementById('tab-h').classList.toggle('active', type === 'horizontal');
+  document.getElementById('tab-v').classList.toggle('active', type === 'vertical');
+
+  const el = document.getElementById('slot-list');
+  el.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:10px"><span class="spinner"></span></div>';
+
+  fetch(`/api/channels/${CHANNEL_ID}/next-slots?type=${type}&count=8`)
+    .then(r => r.json())
+    .then(slots => {
+      if (!slots.length) { el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px">No slots</div>'; return; }
+      el.innerHTML = slots.map(s => `
+        <div class="slot-row">
+          <div>
+            <div class="slot-day">${s.weekday}</div>
+            <div style="font-size:11px;color:var(--muted)">${s.display.split(' ')[0]}</div>
+          </div>
+          <div class="slot-time">${s.display.split(' ')[1] || s.display}</div>
+        </div>`).join('');
+    });
+}
+
+function addToGcal() {
+  const statusEl = document.getElementById('gcal-status');
+  statusEl.textContent = currentLang === 'tr' ? 'Ekleniyor...' : 'Adding...';
+  statusEl.className = 'gcal-status';
+
+  fetch(`/api/channels/${CHANNEL_ID}/next-slots?type=${currentCalType}&count=8`)
+    .then(r => r.json())
+    .then(slots => fetch('/api/gcal/add-schedule', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ channel_id: CHANNEL_ID, slots, video_type: currentCalType })
+    }))
+    .then(r => r.json())
+    .then(data => {
+      statusEl.textContent = data.ok
+        ? (currentLang === 'tr' ? '✓ Takvime eklendi' : '✓ Added to calendar')
+        : '✕ Error';
+      statusEl.className = 'gcal-status ' + (data.ok ? 'on' : 'off');
+    });
+}
+
+// ── VIDEO MODAL ───────────────────────────────────
+function openModal(idx) {
+  currentIdx = idx;
+  const v = allVideos[idx];
+  if (!v) return;
+
+  document.getElementById('modal-title').textContent = v.stem;
+  document.getElementById('modal-video').src = `/api/video/stream/${CHANNEL_ID}/${encodeURIComponent(v.rel)}`;
+
+  const thumb  = document.getElementById('modal-thumb');
+  const noThumb = document.getElementById('no-thumb');
+  if (v.has_thumb) {
+    thumb.src = `/api/video/thumbnail/${CHANNEL_ID}/${encodeURIComponent(v.rel)}`;
+    thumb.style.display = 'block'; noThumb.style.display = 'none';
+  } else { thumb.style.display = 'none'; noThumb.style.display = 'block'; }
+
+  const meta = v.meta || {};
+  const isShorts = !!meta.is_shorts;
+  document.getElementById('f-shorts').checked = isShorts;
+  document.getElementById('type-label').textContent = isShorts ? 'Shorts (9:16)' : 'Normal Video (16:9)';
+  document.getElementById('f-title').value   = meta.title || '';
+  document.getElementById('f-desc').value    = meta.description || '';
+  document.getElementById('f-tags').value    = (meta.tags || []).join(', ');
+  document.getElementById('f-privacy').value = meta.privacy || 'private';
+  document.getElementById('title-count').textContent = (meta.title || '').length + '/100';
+  if (meta.publish_at) document.getElementById('f-publish').value = toLocalInput(new Date(meta.publish_at));
+  else document.getElementById('f-publish').value = '';
+
+  document.getElementById('yt-progress').style.display = 'none';
+  document.getElementById('upload-btn').disabled = false;
+  document.getElementById('upload-btn').innerHTML = '▲ <span>' + (currentLang === 'tr' ? "YouTube'a Gönder" : 'Upload to YouTube') + '</span>';
+
+  loadSlots(isShorts);
+  document.getElementById('videoModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('videoModal').classList.remove('open');
+  document.getElementById('modal-video').src = '';
+}
+
+function onShortsToggle() {
+  const isShorts = document.getElementById('f-shorts').checked;
+  document.getElementById('type-label').textContent = isShorts ? 'Shorts (9:16)' : 'Normal Video (16:9)';
+  loadSlots(isShorts);
+}
+
+function loadSlots(isShorts) {
+  const vtype = isShorts ? 'vertical' : 'horizontal';
+  fetch(`/api/channels/${CHANNEL_ID}/next-slots?type=${vtype}&count=4`)
+    .then(r => r.json())
+    .then(slots => {
+      const el = document.getElementById('slot-grid');
+      el.innerHTML = slots.map(s =>
+        `<div class="slot-item" data-dt="${s.datetime}" onclick="selectSlot(this)">
+          <span class="slot-day">${s.weekday}</span><span>${s.display}</span>
+        </div>`).join('');
+    });
+}
+
+function selectSlot(el) {
+  document.querySelectorAll('.slot-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('f-publish').value = toLocalInput(new Date(el.dataset.dt));
+}
+
+function generateAI() {
+  const btn = document.getElementById('ai-btn');
+  btn.textContent = '⏳'; btn.disabled = true;
+  fetch('/api/ai/generate', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ channel_id: CHANNEL_ID, video_name: allVideos[currentIdx].stem, lang: CHANNEL_LANG })
+  })
+  .then(r => r.json())
+  .then(data => {
+    btn.textContent = '✨ AI'; btn.disabled = false;
+    if (data.ok && data.meta) {
+      document.getElementById('f-title').value = data.meta.title || '';
+      document.getElementById('f-desc').value  = data.meta.description || '';
+      document.getElementById('f-tags').value  = (data.meta.tags || []).join(', ');
+      document.getElementById('title-count').textContent = (data.meta.title || '').length + '/100';
+    }
+  });
+}
+
+function saveMeta() {
+  const meta = collectMeta();
+  const btn  = document.getElementById('save-btn');
+  fetch(`/api/channels/${CHANNEL_ID}/video-meta`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ video_rel: allVideos[currentIdx].rel, meta })
+  }).then(() => {
+    allVideos[currentIdx].meta = meta;
+    applyFilters();
+    btn.innerHTML = '✓';
+    setTimeout(() => { btn.innerHTML = `💾 <span>${currentLang === 'tr' ? 'Kaydet' : 'Save'}</span>`; }, 1500);
+  });
+}
+
+function uploadVideo() {
+  const meta = collectMeta();
+  if (!meta.title) { alert(currentLang === 'tr' ? 'Başlık zorunlu' : 'Title required'); return; }
+
+  const btn = document.getElementById('upload-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳';
+
+  const prog = document.getElementById('yt-progress');
+  const fill = document.getElementById('yt-progress-fill');
+  const txt  = document.getElementById('yt-progress-text');
+  prog.style.display = 'block';
+  fill.style.width = '5%';
+  txt.textContent = currentLang === 'tr' ? 'Yükleme başlatıldı...' : 'Starting upload...';
+
+  // Simüle progress (gerçek progress için SSE/WebSocket gerekir)
+  let pct = 5;
+  const ticker = setInterval(() => {
+    pct = Math.min(pct + Math.random() * 8, 90);
+    fill.style.width = pct + '%';
+    txt.textContent = (currentLang === 'tr' ? 'Yükleniyor... ' : 'Uploading... ') + Math.round(pct) + '%';
+  }, 800);
+
+  fetch('/api/upload', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ channel_id: CHANNEL_ID, video_rel: allVideos[currentIdx].rel, metadata: meta, publish_social: true })
+  })
+  .then(r => r.json())
+  .then(data => {
+    clearInterval(ticker);
+    if (data.status === 'uploading') {
+      fill.style.width = '100%';
+      txt.textContent = currentLang === 'tr' ? '✓ YouTube\'da işleniyor...' : '✓ Processing on YouTube...';
+      btn.innerHTML = '✓';
+      setTimeout(() => { closeModal(); loadVideos(); }, 2000);
+    } else {
+      fill.style.width = '100%'; fill.style.background = 'var(--accent)';
+      txt.textContent = 'Error: ' + JSON.stringify(data);
+      btn.disabled = false;
+      btn.textContent = '▲ Retry';
+    }
+  });
+}
+
+function collectMeta() {
+  const pub = document.getElementById('f-publish').value;
+  return {
+    title:       document.getElementById('f-title').value.trim(),
+    description: document.getElementById('f-desc').value.trim(),
+    tags:        document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+    privacy:     document.getElementById('f-privacy').value,
+    is_shorts:   document.getElementById('f-shorts').checked,
+    publish_at:  pub ? new Date(pub).toISOString() : null,
+  };
+}
+
+function doAuth() {
+  fetch('/api/auth/' + CHANNEL_ID)
+    .then(r => r.json())
+    .then(data => window.open(data.auth_url, '_blank', 'width=600,height=700'));
+}
+
+function toLocalInput(dt) {
+  const p = n => String(n).padStart(2, '0');
+  return `${dt.getFullYear()}-${p(dt.getMonth()+1)}-${p(dt.getDate())}T${p(dt.getHours())}:${p(dt.getMinutes())}`;
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// Init
+setLang(currentLang);
+loadVideos();
+loadCalendar('horizontal');
+
+// Check gcal status
+fetch('/api/gcal/status').then(r => r.json()).then(d => {
+  const el = document.getElementById('gcal-status');
+  el.textContent = d.connected
+    ? (currentLang === 'tr' ? '✓ Takvim bağlı' : '✓ Calendar connected')
+    : (currentLang === 'tr' ? 'Takvim bağlı değil' : 'Calendar not connected');
+  el.className = 'gcal-status ' + (d.connected ? 'on' : 'off');
+});
+</script>
+</body>
+</html>

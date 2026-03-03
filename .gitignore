@@ -1,0 +1,21 @@
+# Ortam & gizli dosyalar
+.env
+secrets/
+*.json
+!package.json
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+
+# Data
+data/
+*.mp4
+*.mov
+*.avi
+*.mkv
+
+# Mac
+.DS_Store

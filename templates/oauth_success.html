@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Yetkilendirme Başarılı</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+body{background:#0a0a0c;color:#e8e8f0;font-family:'DM Sans',sans-serif;
+  display:flex;align-items:center;justify-content:center;min-height:100vh;}
+.box{text-align:center;padding:40px;}
+.icon{font-size:64px;margin-bottom:16px;}
+h1{font-size:22px;margin-bottom:8px;}
+p{color:#6b6b80;font-size:14px;}
+a{color:#00e676;text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="icon">✅</div>
+  <h1>Yetkilendirme Başarılı</h1>
+  <p>{{ channel_id }} kanalı YouTube'a bağlandı.</p>
+  <p style="margin-top:16px"><a href="/channel/{{ channel_id }}">← Kanala dön</a></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YT Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0a0a0c;
+  --surface: #111116;
+  --surface2:#16161d;
+  --border:  #1e1e28;
+  --border2: #2a2a38;
+  --accent:  #ff3f3f;
+  --accent2: #ffaa00;
+  --green:   #00e676;
+  --blue:    #4488ff;
+  --text:    #e8e8f0;
+  --muted:   #6b6b80;
+  --mono:    'Space Mono', monospace;
+  --sans:    'DM Sans', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+
+/* ── NAV ── */
+nav {
+  display: flex; align-items: center; gap: 16px;
+  padding: 0 32px; height: 56px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky; top: 0; z-index: 100;
+}
+.logo { font-family: var(--mono); font-size: 13px; letter-spacing: 3px; color: var(--accent); }
+.logo span { color: var(--muted); }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+/* Lang toggle */
+.lang-toggle {
+  display: flex; align-items: center;
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 8px; overflow: hidden; font-family: var(--mono); font-size: 11px;
+}
+.lang-btn {
+  padding: 5px 11px; cursor: pointer; border: none; background: transparent;
+  color: var(--muted); transition: all .15s; letter-spacing: 1px;
+}
+.lang-btn.active { background: var(--accent); color: #fff; }
+
+/* ── STATS BAR ── */
+.stats-bar {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  overflow-x: auto;
+}
+.stat-item {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 14px 32px; gap: 3px;
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.stat-item:last-child { border-right: none; }
+.stat-val { font-family: var(--mono); font-size: 22px; font-weight: 700; }
+.stat-val.red    { color: var(--accent); }
+.stat-val.yellow { color: var(--accent2); }
+.stat-val.green  { color: var(--green); }
+.stat-val.blue   { color: var(--blue); }
+.stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; }
+
+/* ── MAIN ── */
+main { max-width: 1260px; margin: 0 auto; padding: 36px 32px; }
+.page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 32px; }
+.page-header h1 { font-size: 26px; font-weight: 700; }
+.page-header p  { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+/* ── GRID ── */
+.channel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 14px;
+}
+
+/* ── CARD ── */
+.channel-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 22px;
+  transition: border-color .2s, transform .15s;
+  position: relative; overflow: hidden;
+}
+.channel-card::before {
+  content: ''; position: absolute; inset: 0; opacity: 0;
+  background: linear-gradient(135deg, #ff3f3f08, transparent);
+  transition: opacity .2s; pointer-events: none;
+}
+.channel-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.channel-card:hover::before { opacity: 1; }
+.channel-card.auth-ok  { border-left: 3px solid var(--green); }
+.channel-card.no-auth  { border-left: 3px solid var(--accent2); }
+
+.card-actions {
+  position: absolute; top: 14px; right: 14px;
+  display: flex; gap: 6px; opacity: 0; transition: opacity .2s;
+}
+.channel-card:hover .card-actions { opacity: 1; }
+.card-btn {
+  width: 28px; height: 28px; border-radius: 6px;
+  border: 1px solid var(--border2); background: var(--bg);
+  color: var(--muted); cursor: pointer; font-size: 12px;
+  display: flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.card-btn:hover { color: var(--text); border-color: var(--accent); }
+
+.card-link { text-decoration: none; color: inherit; display: block; }
+.card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.card-icon {
+  width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+  background: linear-gradient(135deg, #ff3f3f22, #ff3f3f44);
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.card-name { font-size: 16px; font-weight: 600; }
+.card-id   { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+.card-stats { display: flex; gap: 20px; }
+.cs-val { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--accent2); }
+.cs-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+.card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+.auth-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; padding: 3px 8px; border-radius: 4px; font-family: var(--mono);
+}
+.auth-badge.ok  { background: #00e67618; color: var(--green); }
+.auth-badge.bad { background: #ffaa0018; color: var(--accent2); }
+
+.social-dots { display: flex; gap: 4px; }
+.social-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--border2);
+}
+.social-dot.on { background: var(--blue); }
+
+/* Add card */
+.add-card {
+  border: 1px dashed var(--border2); border-radius: 14px; padding: 22px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; cursor: pointer; min-height: 180px;
+  transition: border-color .2s, background .2s; color: var(--muted);
+}
+.add-card:hover { border-color: var(--accent); background: #ff3f3f06; color: var(--text); }
+.add-icon { font-size: 30px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: #00000099; backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; z-index: 200;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 16px;
+  padding: 28px; width: 660px; max-height: 90vh; overflow-y: auto;
+}
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+.modal h2 { font-size: 17px; font-weight: 600; }
+.modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+.modal-close:hover { color: var(--text); }
+
+.form-group { margin-bottom: 15px; }
+label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+input, textarea, select {
+  width: 100%; background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 9px 13px; color: var(--text);
+  font-family: var(--sans); font-size: 14px; transition: border-color .15s; outline: none;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 75px; }
+
+.section-sep {
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: 2px; color: var(--muted);
+  margin: 20px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+
+/* Day picker */
+.day-picker { display: flex; gap: 5px; }
+.day-btn {
+  width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border2);
+  background: var(--bg); color: var(--muted); cursor: pointer; font-size: 10px;
+  font-family: var(--mono); transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.day-btn.sel { background: #ff3f3f22; border-color: var(--accent); color: var(--accent); }
+
+/* Time slots */
+.time-slots { display: flex; flex-direction: column; gap: 7px; margin-top: 7px; }
+.time-row { display: flex; align-items: center; gap: 8px; }
+.time-row input { width: 130px; }
+.rm-time { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; }
+.rm-time:hover { color: var(--accent); }
+.add-time {
+  background: none; border: 1px dashed var(--border2); border-radius: 6px;
+  color: var(--muted); cursor: pointer; font-size: 12px; padding: 5px 14px;
+  margin-top: 5px; transition: all .15s; font-family: var(--sans);
+}
+.add-time:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Social */
+.social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.social-item {
+  border: 1px solid var(--border2); border-radius: 8px; padding: 11px 13px;
+  cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 9px;
+}
+.social-item.on { border-color: var(--blue); background: #4488ff0a; }
+.social-chk {
+  margin-left: auto; width: 18px; height: 18px; border-radius: 4px;
+  border: 1.5px solid var(--border2); display: flex; align-items: center;
+  justify-content: center; font-size: 11px; color: transparent; transition: all .15s;
+}
+.social-item.on .social-chk { background: var(--blue); border-color: var(--blue); color: #fff; }
+.token-fields { margin-top: 10px; display: none; }
+
+/* Buttons */
+.btn {
+  padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  cursor: pointer; border: none; transition: all .2s; font-family: var(--sans);
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #ff6060; }
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border2); }
+.btn-ghost:hover { border-color: var(--text); color: var(--text); }
+.btn-danger { background: transparent; color: var(--accent); border: 1px solid #ff3f3f44; }
+.btn-danger:hover { background: #ff3f3f18; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+
+/* Confirm */
+.confirm-overlay {
+  position: fixed; inset: 0; background: #00000099; backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; z-index: 300;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.confirm-overlay.open { opacity: 1; pointer-events: all; }
+.confirm-box {
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 12px;
+  padding: 28px; width: 380px; text-align: center;
+}
+.confirm-box h3 { margin-bottom: 8px; }
+.confirm-box p { color: var(--muted); font-size: 14px; margin-bottom: 22px; }
+.confirm-actions { display: flex; gap: 10px; justify-content: center; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 28px; right: 28px; z-index: 999;
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 10px;
+  padding: 11px 18px; font-size: 13px;
+  transform: translateY(70px); opacity: 0; transition: all .3s;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.ok  { border-color: var(--green); }
+.toast.err { border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">YT<span>_</span>STUDIO</div>
+  <div class="nav-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn"        id="btn-tr" onclick="setLang('tr')">TR</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Stats bar -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-val red" id="s-channels">{{ channels|length }}</div>
+    <div class="stat-lbl" data-en="Channels" data-tr="Kanal">Channels</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-val yellow" id="s-pending">
+      {{ channels | sum(attribute='pending_count') }}
+    </div>
+    <div class="stat-lbl" data-en="Pending Videos" data-tr="Bekleyen Video">Pending Videos</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-val green" id="s-week">
+      {{ channels | selectattr('next_slot_this_week') | list | length }}
+    </div>
+    <div class="stat-lbl" data-en="Uploads This Week" data-tr="Bu Hafta Yayın">Uploads This Week</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-val blue" id="s-auth">
+      {{ channels | selectattr('auth_ok') | list | length }}
+    </div>
+    <div class="stat-lbl" data-en="Connected" data-tr="Bağlı Kanal">Connected</div>
+  </div>
+</div>
+
+<main>
+  <div class="page-header">
+    <div>
+      <h1 data-en="Channels" data-tr="Kanallar">Channels</h1>
+      <p data-en="Manage your YouTube channels, schedule and publish" data-tr="YouTube kanallarınızı yönetin, zamanlayın ve yayınlayın">Manage your YouTube channels, schedule and publish</p>
+    </div>
+  </div>
+
+  <div class="channel-grid">
+    {% for ch in channels %}
+    <div class="channel-card {{ 'auth-ok' if ch.auth_ok else 'no-auth' }}">
+      <div class="card-actions">
+        <button class="card-btn" onclick="openEdit('{{ ch.id }}')" title="Edit / Düzenle">✏️</button>
+        <button class="card-btn" onclick="openConfirm('{{ ch.id }}','{{ ch.name }}')" title="Delete / Sil">🗑️</button>
+      </div>
+      <a class="card-link" href="/channel/{{ ch.id }}">
+        <div class="card-header">
+          <div class="card-icon">📺</div>
+          <div>
+            <div class="card-name">{{ ch.name }}</div>
+            <div class="card-id">{{ ch.id }}</div>
+          </div>
+        </div>
+        <div class="card-stats">
+          <div>
+            <div class="cs-val">{{ ch.pending_count }}</div>
+            <div class="cs-lbl" data-en="Pending" data-tr="Bekleyen">Pending</div>
+          </div>
+          <div>
+            <div class="cs-val">{{ ch.normal_period.days }}d</div>
+            <div class="cs-lbl" data-en="H.Period" data-tr="Y.Periyot">H.Period</div>
+          </div>
+          <div>
+            <div class="cs-val">{{ ch.shorts_period.days }}d</div>
+            <div class="cs-lbl" data-en="V.Period" data-tr="D.Periyot">V.Period</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="auth-badge {{ 'ok' if ch.auth_ok else 'bad' }}">
+            {{ '✓ Connected' if ch.auth_ok else '⚠ Auth Required' }}
+          </div>
+          <div class="social-dots">
+            {% for p in ['instagram','tiktok','facebook','twitter'] %}
+            <div class="social-dot {{ 'on' if ch.social_platforms and ch.social_platforms.get(p,{}).get('enabled') else '' }}" title="{{ p }}"></div>
+            {% endfor %}
+          </div>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+
+    <div class="add-card" onclick="openAdd()">
+      <div class="add-icon">＋</div>
+      <div style="font-size:13px" data-en="Add New Channel" data-tr="Yeni Kanal Ekle">Add New Channel</div>
+    </div>
+  </div>
+</main>
+
+<!-- ── KANAL MODAL ── -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">New Channel</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <input type="hidden" id="f-eid">
+
+    <div class="form-group" id="f-id-wrap">
+      <label data-en="Channel ID (auto if empty)" data-tr="Kanal ID (boş bırakırsan otomatik)">Channel ID (auto if empty)</label>
+      <input id="f-id" placeholder="e.g. dss">
+    </div>
+    <div class="form-group">
+      <label data-en="Channel Name *" data-tr="Kanal Adı *">Channel Name *</label>
+      <input id="f-name" placeholder="e.g. DSS">
+    </div>
+    <div class="form-group">
+      <label data-en="YouTube Channel ID" data-tr="YouTube Kanal ID">YouTube Channel ID</label>
+      <input id="f-ytid" placeholder="UC...">
+    </div>
+    <div class="form-group">
+      <label data-en="Video Folder" data-tr="Video Klasörü">Video Folder</label>
+      <input id="f-vdir" placeholder="/Volumes/CA1/videos/DSS">
+    </div>
+    <div class="form-group">
+      <label data-en="Description Template" data-tr="Açıklama Şablonu">Description Template</label>
+      <textarea id="f-desc"></textarea>
+    </div>
+    <div class="form-group">
+      <label data-en="Default Tags (comma separated)" data-tr="Varsayılan Etiketler">Default Tags</label>
+      <input id="f-tags" placeholder="motorcycle, motor, test">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group">
+        <label data-en="Language" data-tr="Dil">Language</label>
+        <select id="f-lang"><option value="tr">Türkçe</option><option value="en">English</option></select>
+      </div>
+      <div class="form-group">
+        <label data-en="Category ID" data-tr="Kategori ID">Category ID</label>
+        <input id="f-cat" value="22" placeholder="22=People&Blogs">
+      </div>
+    </div>
+
+    <div class="section-sep" data-en="🎬 Horizontal Schedule" data-tr="🎬 Yatay Zamanlama">🎬 Horizontal Schedule</div>
+    <div class="form-group">
+      <label data-en="Publish Days" data-tr="Yayın Günleri">Publish Days</label>
+      <div class="day-picker" id="h-days">
+        <button class="day-btn" data-d="0">Mo</button>
+        <button class="day-btn" data-d="1">Tu</button>
+        <button class="day-btn" data-d="2">We</button>
+        <button class="day-btn" data-d="3">Th</button>
+        <button class="day-btn" data-d="4">Fr</button>
+        <button class="day-btn" data-d="5">Sa</button>
+        <button class="day-btn" data-d="6">Su</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label data-en="Period (every N days)" data-tr="Periyot (her N günde bir)">Period (every N days)</label>
+      <input type="number" id="f-hdays" value="7" min="1" max="60">
+    </div>
+    <div class="form-group">
+      <label data-en="Time Slots" data-tr="Saat Dilimleri">Time Slots</label>
+      <div class="time-slots" id="h-times"></div>
+      <button class="add-time" onclick="addTime('h')">＋ Add Time</button>
+    </div>
+
+    <div class="section-sep" data-en="📱 Vertical / Shorts Schedule" data-tr="📱 Dikey / Shorts Zamanlama">📱 Vertical / Shorts Schedule</div>
+    <div class="form-group">
+      <label data-en="Publish Days" data-tr="Yayın Günleri">Publish Days</label>
+      <div class="day-picker" id="v-days">
+        <button class="day-btn" data-d="0">Mo</button>
+        <button class="day-btn" data-d="1">Tu</button>
+        <button class="day-btn" data-d="2">We</button>
+        <button class="day-btn" data-d="3">Th</button>
+        <button class="day-btn" data-d="4">Fr</button>
+        <button class="day-btn" data-d="5">Sa</button>
+        <button class="day-btn" data-d="6">Su</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label data-en="Period (every N days)" data-tr="Periyot">Period</label>
+      <input type="number" id="f-vdays" value="3" min="1" max="60">
+    </div>
+    <div class="form-group">
+      <label data-en="Time Slots" data-tr="Saat Dilimleri">Time Slots</label>
+      <div class="time-slots" id="v-times"></div>
+      <button class="add-time" onclick="addTime('v')">＋ Add Time</button>
+    </div>
+
+    <div class="section-sep" data-en="📡 Social Media" data-tr="📡 Sosyal Medya">📡 Social Media</div>
+    <div class="social-grid">
+      <div class="social-item" data-p="instagram" onclick="toggleSocial(this)">
+        <span>📸</span><span style="font-size:13px">Instagram</span><span class="social-chk">✓</span>
+      </div>
+      <div class="social-item" data-p="tiktok" onclick="toggleSocial(this)">
+        <span>🎵</span><span style="font-size:13px">TikTok</span><span class="social-chk">✓</span>
+      </div>
+      <div class="social-item" data-p="facebook" onclick="toggleSocial(this)">
+        <span>📘</span><span style="font-size:13px">Facebook</span><span class="social-chk">✓</span>
+      </div>
+      <div class="social-item" data-p="twitter" onclick="toggleSocial(this)">
+        <span>🐦</span><span style="font-size:13px">X (Twitter)</span><span class="social-chk">✓</span>
+      </div>
+    </div>
+    <div class="token-fields" id="token-fields">
+      <div class="form-group" style="margin-top:10px">
+        <label>Instagram Token</label><input id="f-ig" placeholder="EAABs...">
+      </div>
+      <div class="form-group">
+        <label>TikTok Token</label><input id="f-tt" placeholder="act.xxx...">
+      </div>
+      <div class="form-group">
+        <label>Facebook Token</label><input id="f-fb" placeholder="EAABs...">
+      </div>
+      <div class="form-group">
+        <label>X Bearer Token</label><input id="f-tw" placeholder="AAAAAAA...">
+      </div>
+    </div>
+
+    <div class="section-sep" data-en="📅 Google Calendar" data-tr="📅 Google Takvim">📅 Google Calendar</div>
+    <div class="form-group">
+      <label data-en="Calendar ID" data-tr="Takvim ID">Calendar ID</label>
+      <input id="f-cal" placeholder="primary">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost"   onclick="closeModal()" data-en="Cancel" data-tr="İptal">Cancel</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveChannel()" data-en="Create" data-tr="Oluştur">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete -->
+<div class="confirm-overlay" id="confirmModal">
+  <div class="confirm-box">
+    <h3 data-en="Delete Channel" data-tr="Kanalı Sil">Delete Channel</h3>
+    <p id="confirmTxt"></p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost"  onclick="closeConfirm()" data-en="Cancel" data-tr="Vazgeç">Cancel</button>
+      <button class="btn btn-danger" onclick="doDelete()"     data-en="Delete" data-tr="Sil">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CHANNELS = {{ channels | tojson }};
+let editId = null, delId = null;
+let currentLang = localStorage.getItem('yt_lang') || 'en';
+
+// ── DİL ──────────────────────────────────────────
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('yt_lang', lang);
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+  document.getElementById('btn-tr').classList.toggle('active', lang === 'tr');
+  document.querySelectorAll('[data-en]').forEach(el => {
+    el.textContent = el.dataset[lang] || el.dataset.en;
+  });
+  // Day buttons
+  const dayLabels = { en: ['Mo','Tu','We','Th','Fr','Sa','Su'], tr: ['Pt','Sa','Ça','Pe','Cu','Ct','Pz'] };
+  document.querySelectorAll('.day-btn').forEach(b => { b.textContent = dayLabels[lang][+b.dataset.d]; });
+  // Add time buttons
+  document.querySelectorAll('.add-time').forEach(b => { b.textContent = lang === 'tr' ? '＋ Saat Ekle' : '＋ Add Time'; });
+  // Modal title / save btn
+  if (!editId) {
+    document.getElementById('modalTitle').textContent = lang === 'tr' ? 'Yeni Kanal' : 'New Channel';
+    document.getElementById('saveBtn').textContent    = lang === 'tr' ? 'Oluştur'   : 'Create';
+  }
+  // Auth badges on cards
+  document.querySelectorAll('.auth-badge.ok').forEach(el  => { el.textContent = lang === 'tr' ? '✓ Bağlı' : '✓ Connected'; });
+  document.querySelectorAll('.auth-badge.bad').forEach(el => { el.textContent = lang === 'tr' ? '⚠ Auth Gerekli' : '⚠ Auth Required'; });
+}
+
+// ── GÜN SEÇİCİ ──────────────────────────────────
+document.querySelectorAll('.day-btn').forEach(b => b.addEventListener('click', () => b.classList.toggle('sel')));
+function getDays(id)      { return [...document.querySelectorAll(`#${id} .day-btn.sel`)].map(b => +b.dataset.d); }
+function setDays(id, arr) { document.querySelectorAll(`#${id} .day-btn`).forEach(b => b.classList.toggle('sel', arr.includes(+b.dataset.d))); }
+
+// ── SAAT SLOTLARI ────────────────────────────────
+function addTime(type, val = '18:00') {
+  const row = document.createElement('div');
+  row.className = 'time-row';
+  row.innerHTML = `<input type="time" value="${val}"><button class="rm-time" onclick="this.parentElement.remove()">×</button>`;
+  document.getElementById(`${type}-times`).appendChild(row);
+}
+function getTimes(id) {
+  return [...document.querySelectorAll(`#${id} input[type=time]`)].map(el => {
+    const [h, m] = el.value.split(':');
+    return { hour: +h, minute: +m };
+  });
+}
+
+// ── SOSYAL MEDYA ─────────────────────────────────
+function toggleSocial(el) {
+  el.classList.toggle('on');
+  document.getElementById('token-fields').style.display = document.querySelector('.social-item.on') ? '' : 'none';
+}
+
+// ── FORM RESET ───────────────────────────────────
+function resetForm() {
+  ['f-name','f-id','f-ytid','f-vdir','f-desc','f-tags','f-cal','f-ig','f-tt','f-fb','f-tw']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('f-hdays').value = 7;
+  document.getElementById('f-vdays').value = 3;
+  document.getElementById('h-times').innerHTML = '';
+  document.getElementById('v-times').innerHTML = '';
+  document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('sel'));
+  document.querySelectorAll('.social-item').forEach(el => el.classList.remove('on'));
+  document.getElementById('token-fields').style.display = 'none';
+  document.getElementById('f-lang').value = 'tr';
+  document.getElementById('f-cat').value  = '22';
+}
+
+// ── MODAL AÇ ─────────────────────────────────────
+function openAdd() {
+  editId = null;
+  document.getElementById('modalTitle').textContent      = currentLang === 'tr' ? 'Yeni Kanal'  : 'New Channel';
+  document.getElementById('saveBtn').textContent         = currentLang === 'tr' ? 'Oluştur'     : 'Create';
+  document.getElementById('f-id-wrap').style.display    = '';
+  resetForm();
+  addTime('h', '18:00');
+  addTime('v', '20:00');
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEdit(id) {
+  const ch = CHANNELS.find(c => c.id === id);
+  if (!ch) return;
+  editId = id;
+  document.getElementById('modalTitle').textContent      = currentLang === 'tr' ? 'Kanalı Düzenle' : 'Edit Channel';
+  document.getElementById('saveBtn').textContent         = currentLang === 'tr' ? 'Güncelle'        : 'Update';
+  document.getElementById('f-id-wrap').style.display    = 'none';
+  resetForm();
+
+  document.getElementById('f-name').value = ch.name || '';
+  document.getElementById('f-ytid').value = ch.youtube_channel_id || '';
+  document.getElementById('f-vdir').value = ch.video_dir || '';
+  document.getElementById('f-desc').value = ch.description_template || '';
+  document.getElementById('f-tags').value = (ch.tags_default || []).join(', ');
+  document.getElementById('f-lang').value = ch.language || 'tr';
+  document.getElementById('f-cat').value  = ch.category_id || '22';
+  document.getElementById('f-cal').value  = ch.google_calendar_id || '';
+
+  const hp = ch.normal_period || {};
+  document.getElementById('f-hdays').value = hp.days || 7;
+  if (hp.weekdays?.length) setDays('h-days', hp.weekdays);
+  (hp.times || [{ hour: hp.hour || 18, minute: hp.minute || 0 }])
+    .forEach(t => addTime('h', `${String(t.hour).padStart(2,'0')}:${String(t.minute).padStart(2,'0')}`));
+
+  const vp = ch.shorts_period || {};
+  document.getElementById('f-vdays').value = vp.days || 3;
+  if (vp.weekdays?.length) setDays('v-days', vp.weekdays);
+  (vp.times || [{ hour: vp.hour || 20, minute: vp.minute || 0 }])
+    .forEach(t => addTime('v', `${String(t.hour).padStart(2,'0')}:${String(t.minute).padStart(2,'0')}`));
+
+  const sp = ch.social_platforms || {};
+  document.querySelectorAll('.social-item').forEach(el => {
+    if (sp[el.dataset.p]?.enabled) el.classList.add('on');
+  });
+  if (document.querySelector('.social-item.on')) document.getElementById('token-fields').style.display = '';
+  if (sp.instagram) document.getElementById('f-ig').value = sp.instagram.token || '';
+  if (sp.tiktok)    document.getElementById('f-tt').value = sp.tiktok.token    || '';
+  if (sp.facebook)  document.getElementById('f-fb').value = sp.facebook.token  || '';
+  if (sp.twitter)   document.getElementById('f-tw').value = sp.twitter.token   || '';
+
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); editId = null; }
+
+// ── KAYDET ───────────────────────────────────────
+async function saveChannel() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { showToast(currentLang === 'tr' ? 'Kanal adı zorunlu' : 'Channel name required', 'err'); return; }
+
+  const social_platforms = {};
+  document.querySelectorAll('.social-item').forEach(el => {
+    social_platforms[el.dataset.p] = { enabled: el.classList.contains('on') };
+  });
+  social_platforms.instagram.token = document.getElementById('f-ig').value.trim();
+  social_platforms.tiktok.token    = document.getElementById('f-tt').value.trim();
+  social_platforms.facebook.token  = document.getElementById('f-fb').value.trim();
+  social_platforms.twitter.token   = document.getElementById('f-tw').value.trim();
+
+  const hTimes = getTimes('h-times');
+  const vTimes = getTimes('v-times');
+  const payload = {
+    name,
+    youtube_channel_id:   document.getElementById('f-ytid').value.trim(),
+    video_dir:            document.getElementById('f-vdir').value.trim() || undefined,
+    description_template: document.getElementById('f-desc').value.trim(),
+    tags_default:         document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+    language:             document.getElementById('f-lang').value,
+    category_id:          document.getElementById('f-cat').value,
+    google_calendar_id:   document.getElementById('f-cal').value.trim(),
+    social_platforms,
+    normal_period: {
+      days: +document.getElementById('f-hdays').value,
+      weekdays: getDays('h-days'),
+      times: hTimes.length ? hTimes : [{ hour: 18, minute: 0 }],
+      hour: hTimes[0]?.hour ?? 18, minute: hTimes[0]?.minute ?? 0,
+    },
+    shorts_period: {
+      days: +document.getElementById('f-vdays').value,
+      weekdays: getDays('v-days'),
+      times: vTimes.length ? vTimes : [{ hour: 20, minute: 0 }],
+      hour: vTimes[0]?.hour ?? 20, minute: vTimes[0]?.minute ?? 0,
+    },
+  };
+  if (!editId) {
+    const idVal = document.getElementById('f-id').value.trim();
+    if (idVal) payload.id = idVal;
+  }
+
+  const res  = await fetch(editId ? `/api/channels/${editId}` : '/api/channels', {
+    method: editId ? 'PUT' : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  if (data.ok) {
+    showToast(editId
+      ? (currentLang === 'tr' ? 'Kanal güncellendi ✓' : 'Channel updated ✓')
+      : (currentLang === 'tr' ? 'Kanal oluşturuldu ✓' : 'Channel created ✓'), 'ok');
+    closeModal();
+    setTimeout(() => location.reload(), 800);
+  } else {
+    showToast('Error: ' + (data.error || 'Unknown'), 'err');
+  }
+}
+
+// ── SİL ──────────────────────────────────────────
+function openConfirm(id, name) {
+  delId = id;
+  document.getElementById('confirmTxt').textContent =
+    currentLang === 'tr'
+      ? `"${name}" kanalını silmek istediğinizden emin misiniz?`
+      : `Are you sure you want to delete "${name}"?`;
+  document.getElementById('confirmModal').classList.add('open');
+}
+function closeConfirm() { document.getElementById('confirmModal').classList.remove('open'); delId = null; }
+async function doDelete() {
+  if (!delId) return;
+  const res  = await fetch(`/api/channels/${delId}`, { method: 'DELETE' });
+  const data = await res.json();
+  closeConfirm();
+  if (data.ok) { showToast(currentLang === 'tr' ? 'Kanal silindi' : 'Channel deleted', 'ok'); setTimeout(() => location.reload(), 800); }
+  else showToast('Error: ' + (data.error || ''), 'err');
+}
+
+// ── TOAST ─────────────────────────────────────────
+function showToast(msg, type = 'ok') {
+  const t = document.getElementById('toast');
+  t.textContent = (type === 'ok' ? '✓ ' : '✕ ') + msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeConfirm(); } });
+
+// Init language
+setLang(currentLang);
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+version: "3.9"
+
+services:
+  ytstudio:
+    build: .
+    container_name: yt_studio
+    restart: unless-stopped
+    ports:
+      - "5055:5055"
+    volumes:
+      # Kanal verileri ve video klasörleri — kalıcı
+      - ./data/channels:/data/channels
+      - ./data/archive:/data/archive
+      # Google OAuth secrets ve token'ları
+      - ./secrets:/app/secrets
+      # .env dosyası
+      - ./.env:/app/.env:ro
+    environment:
+      - YT_BASE_DIR=/data/channels
+      - YT_ARCHIVE_DIR=/data/archive
+      - YT_CLIENT_SECRETS=/app/secrets/client_secrets.json
+      - FLASK_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5055/api/channels"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
