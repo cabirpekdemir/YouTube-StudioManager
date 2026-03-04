@@ -149,7 +149,7 @@ if exist "%INSTALL_DIR%\docker-compose.yml" (
 
 echo.
 echo  %CYAN%Repo klonlaniyor...%RESET%
-git clone https://github.com/cabir/youtube-channel-manager.git "%INSTALL_DIR%"
+git clone https://github.com/cabirpekdemir/YouTube-StudioManager "%INSTALL_DIR%"
 if %errorlevel% neq 0 (
     echo  %RED%Klonlama basarisiz. Internet baglantinizi kontrol edin.%RESET%
     pause

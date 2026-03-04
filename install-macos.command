@@ -170,7 +170,7 @@ if [ -f "$INSTALL_DIR/docker-compose.yml" ]; then
     fi
 else
     info "Repo klonlanıyor..."
-    git clone https://github.com/cabir/youtube-channel-manager.git "$INSTALL_DIR"
+    git clone https://github.com/cabirpekdemir/YouTube-StudioManager "$INSTALL_DIR"
     if [ $? -ne 0 ]; then
         err "Klonlama başarısız. İnternet bağlantınızı kontrol edin."
         wait_enter
